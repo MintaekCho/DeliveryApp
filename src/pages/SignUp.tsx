@@ -6,11 +6,10 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import {RootStackParamList} from '../../App';
-import DisMissKeyboadView from '../components/\bDisMissKeyboadView';
+import DisMissKeyboadView from '../components/DisMissKeyboadView';
 
 type SignUpScreenProps = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 

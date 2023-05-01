@@ -3,7 +3,7 @@ import React, {useCallback, useRef, useState} from 'react';
 import {Alert, StyleSheet} from 'react-native';
 import {Pressable, Text, TextInput, View} from 'react-native';
 import {RootStackParamList} from '../../App';
-import DisMissKeyboadView from '../components/\bDisMissKeyboadView';
+import DisMissKeyboadView from '../components/DisMissKeyboadView';
 
 type SignInScreenProps = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 
