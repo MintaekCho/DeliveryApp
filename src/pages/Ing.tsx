@@ -2,7 +2,6 @@ import {ParamListBase} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React from 'react';
 import {Pressable, Text, View} from 'react-native';
-import {LoggedInParamList} from '../../App';
 
 type DeliveryScreenProps = NativeStackScreenProps<ParamListBase, 'Ing'>;
 
