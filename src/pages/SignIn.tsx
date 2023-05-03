@@ -1,9 +1,16 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import axios, {Axios, AxiosError} from 'axios';
 import React, {useCallback, useRef, useState} from 'react';
-import {Alert, StyleSheet} from 'react-native';
+import {ActivityIndicator, Alert, StyleSheet} from 'react-native';
 import {Pressable, Text, TextInput, View} from 'react-native';
-import {RootStackParamList} from '../../App';
+import Config from 'react-native-config';
+import EncryptedStorage from 'react-native-encrypted-storage';
+import {useDispatch, useSelector} from 'react-redux';
+import {RootStackParamList} from '../../AppInner';
 import DisMissKeyboadView from '../components/DisMissKeyboadView';
+import useSocket from '../hooks/useSocket';
+import userSlice from '../slices/user';
+import {RootState} from '../store/reducer';
 
 type SignInScreenProps = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 
@@ -11,28 +18,56 @@ type SignInScreenProps = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 // props로 type을 'signin', 'signup' 형태로 넘겨서 타입에 따라 로직을 분리해보면?
 export default function SignIn({navigation}: SignInScreenProps) {
   const [email, setEmail] = useState('');
-  const [pw, setPw] = useState('');
+  const [password, setPw] = useState('');
   const emailRef = useRef<TextInput | null>(null);
   const pwRef = useRef<TextInput | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const canToNext = email && pw;
+  const canToNext = email && password;
+  const dispatch = useDispatch();
 
   const toSignUp = useCallback(() => {
     navigation.navigate('SignUp');
   }, [navigation]);
 
-  const onSubmit = useCallback(() => {
+  const onSubmit = useCallback(async () => {
     if (!email || !email.trim()) {
       return Alert.alert('알림', '이메일을 다시 입력해주세요.');
     }
-    if (!pw || !pw.trim()) {
+    if (!password || !password.trim()) {
       return Alert.alert('알림', '비밀번호를 다시 입력해주세요.');
     }
-    Alert.alert('알림', '로그인 되었습니다.');
-  }, [email, pw]);
+    try {
+      setLoading(true);
+      await axios
+        .post(`${Config.API_URL}/login`, {email, password})
+        .then(res => {
+          dispatch(userSlice.actions.setUser(res.data.data));
+          // EncryptedStorage는 Promise 객체라서 await으로 작성해야함
+          EncryptedStorage.setItem('refreshToken', res.data.data.refreshToken);
+          console.log(res.data.data);
+        });
+
+      // const user = useSelector((state: RootState) => state.user.email)
+      // console.log(user)
+      Alert.alert('알림', '로그인 되었습니다.');
+    } catch (error) {
+      const errorResponse = (error as AxiosError).response;
+      if (errorResponse) {
+        Alert.alert('알림', errorResponse.data.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [email, password]);
   return (
-    <DisMissKeyboadView>
-      <View style={styles.Wrap}>
+    <DisMissKeyboadView style={{flex: 1}}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
         <View style={styles.inputWrap}>
           <View style={styles.input}>
             <Text style={styles.inputText}>이메일</Text>
@@ -64,7 +99,7 @@ export default function SignIn({navigation}: SignInScreenProps) {
               }}
               placeholder="비밀번호를 입력해주세요"
               secureTextEntry // 비밀번호 안보이게 설정
-              value={pw}
+              value={password}
               autoComplete="password"
               onSubmitEditing={onSubmit}
               ref={pwRef}
@@ -77,8 +112,13 @@ export default function SignIn({navigation}: SignInScreenProps) {
                   ? styles.btnLogin
                   : [styles.btnLogin, styles.btnLoginActive]
               }
-              onPress={onSubmit}>
-              <Text style={styles.btnLoginText}>로그인</Text>
+              onPress={onSubmit}
+              disabled={loading || !canToNext}>
+              {loading ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={styles.btnLoginText}>로그인</Text>
+              )}
             </Pressable>
             <Pressable onPress={toSignUp}>
               <Text>회원가입</Text>
@@ -110,13 +150,11 @@ const styles = StyleSheet.create({
   btnLoginText: {
     color: 'white',
   },
-  Wrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   inputWrap: {
+    width: 250,
     backgroundColor: '#c4c4c4',
+    justifyContent: 'center',
+    alignContent: 'center',
     padding: 50,
     borderRadius: 20,
   },
