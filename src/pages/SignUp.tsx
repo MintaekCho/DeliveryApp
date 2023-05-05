@@ -54,7 +54,7 @@ export default function SignUp({navigation}: SignUpScreenProps) {
       await axios.post(`${Config.API_URL}/user`, {email, name, password});
       Alert.alert('완료', '회원가입에 성공하였습니다.');
     } catch (error) {
-      const errorResponse = (error as AxiosError).response;
+      const errorResponse = (error as AxiosError<any>).response;
       Alert.alert('알림', '회원가입에 실패하였습니다.');
       if (errorResponse) Alert.alert('알림', errorResponse.data);
     } finally {

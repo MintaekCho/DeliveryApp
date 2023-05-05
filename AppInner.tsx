@@ -7,7 +7,7 @@ import Delivery from './src/pages/Delivery';
 import Settings from './src/pages/Settings';
 import SignIn from './src/pages/SignIn';
 import SignUp from './src/pages/SignUp';
-import {useDispatch, useSelector} from 'react-redux';
+import {useSelector} from 'react-redux';
 import {RootState} from './src/store/reducer';
 import useSocket from './src/hooks/useSocket';
 import EncryptedStorage from 'react-native-encrypted-storage';
@@ -16,6 +16,7 @@ import Config from 'react-native-config';
 import userSlice from './src/slices/user';
 import {Alert} from 'react-native';
 import orderSlice from './src/slices/order';
+import {useAppDispatch} from './src/store';
 
 export type LoggedInParamList = {
   Orders: undefined;
@@ -35,13 +36,13 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppInner() {
   const isLoggedIn = useSelector((state: RootState) => !!state.user.email);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const [socket, disconnect] = useSocket();
 
   useEffect(() => {
     const callback = (data: any) => {
       console.log(data);
-      dispatch(orderSlice.actions.setOrder(data));
+      dispatch(orderSlice.actions.addOrder(data));
     };
 
     if (socket && isLoggedIn) {
@@ -61,8 +62,6 @@ export default function AppInner() {
     }
   }, [socket]);
 
-  const d = useSelector((state: RootState) => state.order);
-  console.log(d);
   // EncryptStroage에 리프레시토큰이 남아있다면 서버로 재검증 요청을 보내서 로그인 상태가 풀리지 않도록 설정하는 로직
   useEffect(() => {
     const getTokenAndRefresh = async () => {
@@ -83,7 +82,7 @@ export default function AppInner() {
             .then(res => dispatch(userSlice.actions.setUser(res.data.data)));
         }
       } catch (error) {
-        const errorResponse = (error as AxiosError).response;
+        const errorResponse = (error as AxiosError<any>).response;
         if (errorResponse?.data.code === 'expired') {
           Alert.alert('알림', '다시 로그인해주세요.');
         }

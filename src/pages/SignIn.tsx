@@ -1,16 +1,14 @@
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import axios, {Axios, AxiosError} from 'axios';
+import axios, {AxiosError} from 'axios';
 import React, {useCallback, useRef, useState} from 'react';
 import {ActivityIndicator, Alert, StyleSheet} from 'react-native';
 import {Pressable, Text, TextInput, View} from 'react-native';
 import Config from 'react-native-config';
 import EncryptedStorage from 'react-native-encrypted-storage';
-import {useDispatch, useSelector} from 'react-redux';
 import {RootStackParamList} from '../../AppInner';
 import DisMissKeyboadView from '../components/DisMissKeyboadView';
-import useSocket from '../hooks/useSocket';
 import userSlice from '../slices/user';
-import {RootState} from '../store/reducer';
+import {useAppDispatch} from '../store';
 
 type SignInScreenProps = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 
@@ -24,7 +22,7 @@ export default function SignIn({navigation}: SignInScreenProps) {
   const [loading, setLoading] = useState(false);
 
   const canToNext = email && password;
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const toSignUp = useCallback(() => {
     navigation.navigate('SignUp');
@@ -52,7 +50,7 @@ export default function SignIn({navigation}: SignInScreenProps) {
       // console.log(user)
       Alert.alert('알림', '로그인 되었습니다.');
     } catch (error) {
-      const errorResponse = (error as AxiosError).response;
+      const errorResponse = (error as AxiosError<any>).response;
       if (errorResponse) {
         Alert.alert('알림', errorResponse.data.message);
       }
